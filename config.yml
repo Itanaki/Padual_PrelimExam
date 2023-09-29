@@ -1,0 +1,63 @@
+---
+- hosts: all
+  become: yes
+  vars_prompt:
+    - name: new_user_name
+      prompt: Insert username
+      private: false
+
+  tasks:
+    - name: Create a new user
+      user:
+        name: "{{ new_user_name }}"
+        state: present
+        createhome: yes
+      become: yes
+
+
+    - name: Banner MOTD
+      ansible.builtin.debug:
+        msg: "{{ motd }}"
+      vars:
+        motd:
+          - "Ansible Managed Node by enzo"
+
+    - name: Install python3 and pip3 in Ubuntu
+      apt:
+        name:
+          - python3
+          - python3-pip
+        state: latest
+        update_cache: yes
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Install python3 in CentOS
+      dnf:
+        name:
+          - python3
+          - python3-pip
+        state: latest
+        use_backend: dnf4
+        update_cache: yes
+      when: ansible_distribution == "CentOS"
+
+    - name: Install java in Ubuntu
+      apt:
+        name: openjdk-11-jre
+        state: latest
+        update_cache: yes
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Install java in CentOS
+      dnf:
+        name: java-11-openjdk
+        state: latest
+        update_cache: yes
+        use_backend: dnf4
+      when: ansible_distribution == "CentOS"
+
+    - name: Use pip3 as default pip & python3 as default python
+      shell:
+        echo 'alias python=/usr/bin/python3' >> ~/.bashrc
+        echo 'alias pip=/home/enzo/.local/bin/pip3' >> ~/.bashrc
+
